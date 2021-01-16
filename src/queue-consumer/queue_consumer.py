@@ -1,0 +1,13 @@
+import boto3
+
+endpoint_url = 'http://192.168.49.2:31566'
+queue_name = 'crop-mask-dev'
+sqs = boto3.resource('sqs', endpoint_url=endpoint_url)
+queue = sqs.get_queue_by_name(QueueName=queue_name)
+print(queue.url)
+
+messages = queue.receive_messages()
+for m in messages:
+    print(m.body)
+    m.delete()
+

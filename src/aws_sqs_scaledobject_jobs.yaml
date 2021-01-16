@@ -1,0 +1,32 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledJob
+metadata:
+  name: aws-sqs-queue-scaledobject-jobs
+  namespace: default
+spec:
+  pollingInterval: 30
+  maxReplicaCount: 4
+  jobTargetRef:
+    parallelism: 2
+    completions: 2
+    activeDeadlineSeconds: 600
+    backoffLimit: 6
+    template:
+      spec:
+        containers:
+        - name: consumer-job
+          image: vfive/py-aws-boto3
+          env:
+          - name: AWS_ACCESS_KEY_ID
+            value: test
+          - name: AWS_SECRET_ACCESS_KEY
+            value: test
+          - name: QUEUE_NAME
+            value: crop-mask-dev
+  triggers:
+  - type: aws-sqs-queue
+    metadata:
+      queueName: crop-mask-dev
+      queueLength: '10'
+      queueURL: "http://localhost:31566/000000000000/crop-mask-dev"
+
