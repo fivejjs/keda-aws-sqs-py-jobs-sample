@@ -9,7 +9,7 @@ spec:
       restartPolicy: Never
       containers:
       - name: consumer-job
-        image: vfive/py-aws-boto3
+        image: vfive/py-aws-boto3:latest
         env:
         - name: AWS_ACCESS_KEY_ID
           value: test
