@@ -1,10 +1,32 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: test-secrets
+data:
+  AWS_ACCESS_KEY_ID: test
+  AWS_SECRET_ACCESS_KEY: test
+---
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: keda-trigger-auth-aws-credentials
+  namespace: default
+spec:
+  secretTargetRef:
+  - parameter: awsAccessKeyID     # Required.
+    name: test-secrets            # Required.
+    key: AWS_ACCESS_KEY_ID        # Required.
+  - parameter: awsSecretAccessKey # Required.
+    name: test-secrets            # Required.
+    key: AWS_SECRET_ACCESS_KEY    # Required.
+---
 apiVersion: keda.sh/v1alpha1
 kind: ScaledJob
 metadata:
   name: aws-sqs-queue-scaledobject-jobs
   namespace: default
 spec:
-  pollingInterval: 30
+  pollingInterval: 1
   maxReplicaCount: 4
   jobTargetRef:
     parallelism: 2
@@ -21,12 +43,17 @@ spec:
             value: test
           - name: AWS_SECRET_ACCESS_KEY
             value: test
+          - name: AWS_REGION
+            value: ap-southeast-2
           - name: QUEUE_NAME
             value: crop-mask-dev
   triggers:
   - type: aws-sqs-queue
+    authenticationRef:
+      name: keda-trigger-auth-aws-credentials
     metadata:
       queueName: crop-mask-dev
       queueLength: '10'
-      queueURL: "http://localhost:31566/000000000000/crop-mask-dev"
-
+      awsRegion: "ap-southeast-2"
+      queueURL: http://192.168.49.2:31566/000000000000/crop-mask-dev
+      identityOwner: pod
