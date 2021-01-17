@@ -1,6 +1,6 @@
 import logging
 import sys
-
+import time
 import boto3
 
 logger = logging.getLogger(__name__)
@@ -24,6 +24,7 @@ def main():
         for m in messages:
             print(m.body)
             m.delete()
+            time.sleep(10)
     print('!done the ')
     return 0
 
