@@ -1,11 +1,11 @@
-import hashlib
-import string
-import random
 import logging
-import yaml
-import sys,os, time
-from kubernetes import client, config, utils
+import os
+import random
+import string
+import sys
+
 import kubernetes.client
+from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
 # Set logging
@@ -15,6 +15,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 config.load_kube_config()
 configuration = kubernetes.client.Configuration()
 api_instance = kubernetes.client.BatchV1Api(kubernetes.client.ApiClient(configuration))
+
 
 def kube_delete_empty_pods(namespace='default', phase='Succeeded'):
     """
@@ -48,8 +49,9 @@ def kube_delete_empty_pods(namespace='default', phase='Succeeded'):
                 logging.info("Pod: {} still not done... Phase: {}".format(podname, pod.status.phase))
         except ApiException as e:
             logging.error("Exception when calling CoreV1Api->delete_namespaced_pod: %s\n" % e)
-    
+
     return
+
 
 def kube_cleanup_finished_jobs(namespace='default', state='Finished'):
     """
@@ -70,15 +72,15 @@ def kube_cleanup_finished_jobs(namespace='default', state='Finished'):
              ex: kubectl delete pods/PODNAME
     """
     deleteoptions = client.V1DeleteOptions()
-    try: 
+    try:
         jobs = api_instance.list_namespaced_job(namespace,
                                                 include_uninitialized=False,
                                                 pretty=True,
                                                 timeout_seconds=60)
-        #print(jobs)
+        # print(jobs)
     except ApiException as e:
         print("Exception when calling BatchV1Api->list_namespaced_job: %s\n" % e)
-    
+
     # Now we have all the jobs, lets clean up
     # We are also logging the jobs we didn't clean up because they either failed or are still running
     for job in jobs.items:
@@ -88,13 +90,13 @@ def kube_cleanup_finished_jobs(namespace='default', state='Finished'):
         if job.status.succeeded == 1:
             # Clean up Job
             logging.info("Cleaning up Job: {}. Finished at: {}".format(jobname, job.status.completion_time))
-            try: 
+            try:
                 # What is at work here. Setting Grace Period to 0 means delete ASAP. Otherwise it defaults to
                 # some value I can't find anywhere. Propagation policy makes the Garbage cleaning Async
                 api_response = api_instance.delete_namespaced_job(jobname,
                                                                   namespace,
                                                                   deleteoptions,
-                                                                  grace_period_seconds= 0, 
+                                                                  grace_period_seconds=0,
                                                                   propagation_policy='Background')
                 logging.debug(api_response)
             except ApiException as e:
@@ -103,11 +105,12 @@ def kube_cleanup_finished_jobs(namespace='default', state='Finished'):
             if jobstatus is None and job.status.active == 1:
                 jobstatus = 'active'
             logging.info("Job: {} not cleaned up. Current status: {}".format(jobname, jobstatus))
-    
+
     # Now that we have the jobs cleaned, let's clean the pods
     kube_delete_empty_pods(namespace)
     # And we are done!
     return
+
 
 def kube_create_job_object(name, container_image, namespace="default", container_name="jobcontainer", env_vars={}):
     """
@@ -144,19 +147,18 @@ def kube_create_job_object(name, container_image, namespace="default", container
     body.metadata = client.V1ObjectMeta(namespace=namespace, name=name)
     # And a Status
     body.status = client.V1JobStatus()
-     # Now we start with the Template...
+    # Now we start with the Template...
     template = client.V1PodTemplate()
     template.template = client.V1PodTemplateSpec()
     # Passing Arguments in Env:
     env_list = []
     for env_name, env_value in env_vars.items():
-        env_list.append( client.V1EnvVar(name=env_name, value=env_value) )
+        env_list.append(client.V1EnvVar(name=env_name, value=env_value))
     container = client.V1Container(name=container_name, image=container_image, env=env_list)
     template.template.spec = client.V1PodSpec(containers=[container], restart_policy='Never')
     # And finaly we can create our V1JobSpec!
     body.spec = client.V1JobSpec(ttl_seconds_after_finished=600, template=template.template)
     return body
-    
 
 
 def kube_test_credentials():
@@ -167,26 +169,29 @@ def kube_test_credentials():
     Check Credentials, permissions, keys, etc.
     Docs: https://cloud.google.com/docs/authentication/
     """
-    try: 
+    try:
         api_response = api_instance.get_api_resources()
         logging.info(api_response)
     except ApiException as e:
         print("Exception when calling API: %s\n" % e)
+
 
 def kube_create_job():
     # Create the job definition
     container_image = "namespace/k8-test-app:83226641581a1f0971055f972465cb903755fc9a"
     name = id_generator()
     body = kube_create_job_object(name, container_image, env_vars={"VAR": "TESTING"})
-    try: 
+    try:
         api_response = api_instance.create_namespaced_job("default", body, pretty=True)
         print(api_response)
     except ApiException as e:
         print("Exception when calling BatchV1Api->create_namespaced_job: %s\n" % e)
     return
 
+
 def id_generator(size=12, chars=string.ascii_lowercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
+
 
 if __name__ == '__main__':
     # Testing Credentials
