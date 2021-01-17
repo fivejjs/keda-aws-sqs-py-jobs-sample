@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: batch-jobs
+spec:
+  parallelism: 4
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: consumer-job
+        image: vfive/py-aws-boto3
+        env:
+        - name: AWS_ACCESS_KEY_ID
+          value: test
+        - name: AWS_SECRET_ACCESS_KEY
+          value: test
+        - name: AWS_REGION
+          value: ap-southeast-2
+        - name: QUEUE_NAME
+          value: crop-mask-dev
