@@ -4,6 +4,7 @@ metadata:
   name: batch-jobs
 spec:
   parallelism: 4
+  completions: 4
   template:
     spec:
       restartPolicy: Never
