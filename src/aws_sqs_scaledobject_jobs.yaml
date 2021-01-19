@@ -29,15 +29,15 @@ spec:
   pollingInterval: 1
   maxReplicaCount: 4
   jobTargetRef:
-    parallelism: 2
-    completions: 2
+    parallelism: 1
+    completions: 1
     activeDeadlineSeconds: 600
     backoffLimit: 6
     template:
       spec:
         containers:
         - name: consumer-job
-          image: vfive/py-aws-boto3
+          image: vfive/py-aws-boto3:latest
           env:
           - name: AWS_ACCESS_KEY_ID
             value: test
@@ -55,5 +55,5 @@ spec:
       queueName: crop-mask-dev
       queueLength: '10'
       awsRegion: "ap-southeast-2"
-      queueURL: http://192.168.49.2:31566/000000000000/crop-mask-dev
+      queueURL: http://191.168.49.2:31566/000000000000/crop-mask-dev
       identityOwner: pod

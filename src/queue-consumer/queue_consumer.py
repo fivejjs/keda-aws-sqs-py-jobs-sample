@@ -6,7 +6,7 @@ import time
 
 logger = logging.getLogger(__name__)
 
-endpoint_url = 'http://191.168.49.2:31566'
+endpoint_url = 'http://192.168.49.2:31566'
 queue_name = 'crop-mask-dev'
 sqs = boto3.resource('sqs', endpoint_url=endpoint_url, region_name='ap-southeast-2')
 queue = sqs.get_queue_by_name(QueueName=queue_name)
@@ -26,7 +26,7 @@ def main():
             print(m.body)
             m.delete()
             time.sleep(10)
-    print('!done the ')
+    print('!done the queue!')
     return 0
 
 

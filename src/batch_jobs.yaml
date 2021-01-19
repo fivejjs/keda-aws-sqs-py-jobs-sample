@@ -3,8 +3,7 @@ kind: Job
 metadata:
   name: batch-jobs
 spec:
-  parallelism: 4
-  completions: 4
+  parallelism: 1
   template:
     spec:
       restartPolicy: Never
