@@ -26,7 +26,7 @@ def main():
             print(m.body)
             m.delete()
             time.sleep(10)
-    print('!done the ')
+    print('!done the queue!')
     return 0
 
 
